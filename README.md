@@ -1,12 +1,14 @@
-# 目录
+# Install
 
-# 使用方法
+The only component exposed to external is `InfiniteScroll`. And use install script like below:
 
-本组件对外暴露`InfiniteScroll`组件。
+```bash
+npm install --save @sevenryze/infinite-scroll
+```
 
-# 用法
+# Usage
 
-## 使用 window 作为全局列表
+## Use the `window` object as the global scroller
 
 ```JavaScript
 import * as React from "react";
@@ -77,7 +79,7 @@ export class App extends React.Component<
         {this.state.cardList.map(this.renderItem)}
 
         {this.state.isFetchingData && (
-          <LoadingIndicator>正 在 加 载...</LoadingIndicator>
+          <LoadingIndicator>Loading...</LoadingIndicator>
         )}
       </MainWrapper>
     );
@@ -88,13 +90,12 @@ export class App extends React.Component<
       <div
         className="item"
         style={{
-          //minHeight: item.height,
           ...(index % 2 !== 0 ? { backgroundColor: "#ccc" } : {})
         }}
         js-index={index}
         key={index}
       >
-        {index + ` ----------- ` + "好".repeat(item.height + 100)}
+        {index + ` ----------- ` + "Great work!".repeat(item.height + 100)}
       </div>
     );
   };
@@ -113,8 +114,20 @@ function getData(num, from = 0) {
 export default hot(module)(App);
 ```
 
+## Use the specific dom element as local scroller
+
+TODO for implement.
+
 # API
 
-This component exposes one public component.
+This component exposes one public class.
 
 ## `InfiniteScroll`
+
+```JavaScript
+<InfiniteScroll
+  isFetching={this.state.isFetchingData}
+  loadMore={this.getMoreCards}
+  threshold={10}
+/>
+```
