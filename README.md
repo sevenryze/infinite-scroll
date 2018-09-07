@@ -120,7 +120,7 @@ TODO for implement.
 
 # API
 
-This component exposes one public class.
+This lib exposes only one public class: `InfiniteScroll`.
 
 ## `InfiniteScroll`
 
@@ -131,3 +131,27 @@ This component exposes one public class.
   threshold={10}
 />
 ```
+
+- `isFetching: boolean`: Indicates we are under fetching status.
+- `loadMore: () => void`: The scroller will invoke this method when we scroll cross the threshold.
+- `threshold: number`: The threshold to the bottom of rendered list.
+
+# Build and Test
+
+Build? you just use this one and forget others hand-tired works.
+
+---
+
+<h2 align="center">Maintainer</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center">
+        <img width="150" height="150" src="https://avatars.githubusercontent.com/sevenryze?v=3">
+        </br>
+        <a href="https://github.com/sevenryze">Seven Ryze</a>
+      </td>
+    </tr>
+  </tbody>
+</table>

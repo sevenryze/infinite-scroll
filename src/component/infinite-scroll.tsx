@@ -1,20 +1,18 @@
 import * as React from "react";
 
-/**********************************************************************************************************************/
-
 export class InfiniteScroll extends React.PureComponent<{
   /**
-   * 是否正在加载
+   * indicate if it's on loading status.
    */
   isFetching: boolean;
 
   /**
-   * 调用此函数加载更多列表项
+   * We will call this method to load more by the time we scroll cross the threshold.
    */
   loadMore: () => void;
 
   /**
-   * 距离底部多少像素触发加载行为
+   * How many pixels to the bottom of list we should trigger to load more.
    */
   threshold: number;
 }> {
@@ -26,7 +24,11 @@ export class InfiniteScroll extends React.PureComponent<{
     window.removeEventListener("scroll", this.handleScroll);
   }
 
-  handleScroll = e => {
+  render() {
+    return <>{this.props.children}</>;
+  }
+
+  private handleScroll = e => {
     if (
       window.innerHeight + window.scrollY >=
         document.body.offsetHeight - this.props.threshold &&
@@ -35,8 +37,4 @@ export class InfiniteScroll extends React.PureComponent<{
       this.props.loadMore();
     }
   };
-
-  render() {
-    return <>{this.props.children}</>;
-  }
 }
