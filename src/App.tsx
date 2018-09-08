@@ -6,12 +6,10 @@ import { InfiniteScroll } from "./component";
 export class App extends React.Component<
   {},
   {
-    isFetchingData: boolean;
     cardList: any[];
   }
 > {
   state = {
-    isFetchingData: true,
     cardList: []
   };
 
@@ -22,26 +20,21 @@ export class App extends React.Component<
   render() {
     return (
       <MainWrapper>
+        <div className="header" />
+
         <InfiniteScroll
-          isFetching={this.state.isFetchingData}
           loadMore={this.getMoreCards}
-          threshold={10}
-        />
-
-        {this.state.cardList.map(this.renderItem)}
-
-        {this.state.isFetchingData && (
-          <LoadingIndicator>正 在 加 载...</LoadingIndicator>
-        )}
+          refresh={this.refresh}
+          loadMoreThreshold={20}
+          pullingEnsureThreshold={80}
+        >
+          {this.state.cardList.map(this.renderItem)}
+        </InfiniteScroll>
       </MainWrapper>
     );
   }
 
-  private getMoreCards = async () => {
-    this.setState({
-      isFetchingData: true
-    });
-
+  private refresh = async () => {
     await new Promise(resolve => {
       setTimeout(() => {
         resolve();
@@ -51,9 +44,26 @@ export class App extends React.Component<
     let newData = getData(5);
 
     this.setState({
-      isFetchingData: false,
+      cardList: newData
+    });
+
+    return newData.length;
+  };
+
+  private getMoreCards = async () => {
+    await new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, 2000);
+    });
+
+    let newData = getData(5);
+
+    this.setState({
       cardList: this.state.cardList.concat(newData)
     });
+
+    return newData.length;
   };
 
   private renderItem = (item, index) => {
@@ -61,14 +71,16 @@ export class App extends React.Component<
       <div
         className="item"
         style={{
-          ...(index % 2 !== 0 ? { backgroundColor: "#ccc" } : {})
+          ...(index % 2 !== 0
+            ? { backgroundColor: "red" }
+            : { backgroundColor: "#ccc" })
         }}
         js-index={index}
         key={index}
       >
-        {item.id +
+        {`index: ${index}, id: ${item.id}` +
           ` ----------- ` +
-          "tower edu is awesome, ".repeat(item.height + 100)}
+          "tower edu is awesome, ".repeat(item.height + 10)}
       </div>
     );
   };
@@ -77,23 +89,18 @@ export class App extends React.Component<
 function getData(num, from = 0) {
   return new Array(num).fill(1).map((_, index) => ({
     id: from + index,
-    height: Math.ceil(Math.random() * 1000) + 50
+    height: Math.ceil(Math.random() * 50) + 50
   }));
 }
 
 const MainWrapper = styled.div`
   display: flex;
-  justify-content: center;
   flex-direction: column;
-`;
 
-const LoadingIndicator = styled.div`
-  margin: 2rem auto;
-  height: 3rem;
-
-  text-align: center;
-
-  font-size: larger;
+  .header {
+    background: rgba(0, 0, 0, 0.3);
+    min-height: 5rem;
+  }
 `;
 
 export default hot(module)(App);

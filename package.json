@@ -1,7 +1,6 @@
 {
   "name": "@sevenryze/infinite-scroll",
-  "version": "1.0.0",
-  "private": false,
+  "version": "2.0.0",
   "files": [
     "dist/component"
   ],
@@ -15,7 +14,6 @@
   "devDependencies": {
     "@types/react": "^16.4.13",
     "@types/react-dom": "^16.0.7",
-    "@types/styled-components": "^3.0.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "file-loader": "^2.0.0",
