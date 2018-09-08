@@ -33,7 +33,8 @@
   },
   "peerDependencies": {
     "react": "^16.4.2",
-    "react-dom": "^16.4.2"
+    "react-dom": "^16.4.2",
+    "styled-components": "^4.0.0-beta.1-2"
   },
   "scripts": {
     "dev": "webpack-dev-server --config webpack-config.js --hot",

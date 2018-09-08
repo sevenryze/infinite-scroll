@@ -25,7 +25,7 @@ export class App extends React.Component<
         <InfiniteScroll
           isFetching={this.state.isFetchingData}
           loadMore={this.getMoreCards}
-          threshold={10}
+          loadMoreThreshold={10}
         />
 
         {this.state.cardList.map(this.renderItem)}
