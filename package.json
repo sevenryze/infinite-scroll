@@ -1,12 +1,11 @@
 {
   "name": "@sevenryze/infinite-scroll",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "files": [
     "dist/component"
   ],
   "main": "dist/component/index.js",
   "types": "dist/component/index.d.ts",
-  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sevenryze/infinite-scroll.git"
@@ -14,6 +13,7 @@
   "devDependencies": {
     "@types/react": "^16.4.13",
     "@types/react-dom": "^16.0.7",
+    "@types/styled-components": "^3.0.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "file-loader": "^2.0.0",
@@ -24,7 +24,8 @@
     "react-hot-loader": "^4.3.6",
     "styled-components": "^4.0.0-beta.1-2",
     "ts-loader": "^5.0.0",
-    "typescript": "^3.0.3",
+    "typescript": "next",
+    "typescript-styled-plugin": "^0.10.0",
     "webpack": "^4.17.2",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "^3.1.8"

@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import App from "./app";
+// @ts-ignore
 import { createGlobalStyle } from "styled-components";
 
 const GlobalStyle = createGlobalStyle`

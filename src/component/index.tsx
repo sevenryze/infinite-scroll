@@ -1,31 +1,40 @@
-import * as React from "react";
+import React from "react";
 import styled from "styled-components";
 import { easing } from "./easing";
 
-type Status = "loading" | "refreshing" | "pulling" | "pulling-ensure" | "init";
+enum Status {
+  normal,
+  appendLoading,
+  refreshing,
+  pulling,
+  pullingEnsured
+}
 
 export class InfiniteScroll extends React.PureComponent<
   {
     /**
-     * We will call this method to load more on the time we scroll cross the threshold.
-     * This method must return a promise to resolve or reject on single loading action.
+     * We will call this method to load more items appended to the origin list, on the time we scrolling cross the `appendMoreThreshold`.
      *
-     * @returns How many new items have been loaded?
+     * This method should return a counter promise to resolve or reject on single loading action.
+     *
+     * @returns How many new items have been appended?
      */
-    loadMore: () => Promise<number>;
+    appendMore: () => Promise<number>;
 
     /**
-     * We will call this method to refresh list on the time we pulling cross the threshold.
+     * We will call this method to load items prefixed to the origin list or refresh page, according to your cases,
+     * on the time we pulling cross the `pullingEnsureThreshold`.
+     *
      * This method must return a promise to resolve or reject on single refresh action.
      *
      * @returns How many new items have been refresh?
      */
-    refresh: () => Promise<number>;
+    refresher: () => Promise<number>;
 
     /**
      * How many pixels to the bottom of list we should trigger to load more.
      */
-    loadMoreThreshold: number;
+    appendMoreThreshold: number;
 
     /**
      * How many pixels when we pulling the list to take the refresh action.
@@ -40,40 +49,40 @@ export class InfiniteScroll extends React.PureComponent<
      */
     hasMore: boolean;
 
-    pullHeight: number;
+    pullTransformDistance: number;
   }
 > {
   state = {
-    status: "init" as Status,
+    status: Status.normal,
     hasMore: true,
-    pullHeight: 0
+    pullTransformDistance: 0
   };
 
-  private isMount: boolean;
+  private isMount = false;
   private loadingIndicatorRef = React.createRef<HTMLDivElement>();
   private wrapperRef = React.createRef<HTMLDivElement>();
-  private initialTouchClientY: number;
+  private initialTouchClientY = 0;
 
   componentDidMount() {
     this.isMount = true;
 
     window.addEventListener("scroll", this.handleScroll);
-    this.wrapperRef.current.addEventListener("touchstart", this.touchStart, {
+    this.wrapperRef.current!.addEventListener("touchstart", this.touchStart, {
       passive: false
     });
-    this.wrapperRef.current.addEventListener("touchmove", this.touchMove, {
+    this.wrapperRef.current!.addEventListener("touchmove", this.touchMove, {
       passive: false
     });
-    this.wrapperRef.current.addEventListener("touchend", this.touchEnd);
+    this.wrapperRef.current!.addEventListener("touchend", this.touchEnd);
   }
 
   componentWillUnmount() {
     this.isMount = false;
 
     window.removeEventListener("scroll", this.handleScroll);
-    this.wrapperRef.current.removeEventListener("touchstart", this.touchStart);
-    this.wrapperRef.current.removeEventListener("touchmove", this.touchMove);
-    this.wrapperRef.current.removeEventListener("touchend", this.touchEnd);
+    this.wrapperRef.current!.removeEventListener("touchstart", this.touchStart);
+    this.wrapperRef.current!.removeEventListener("touchmove", this.touchMove);
+    this.wrapperRef.current!.removeEventListener("touchend", this.touchEnd);
   }
 
   render() {
@@ -82,22 +91,26 @@ export class InfiniteScroll extends React.PureComponent<
         <div
           ref={this.wrapperRef}
           style={{
-            transform: `translateY(${this.state.pullHeight - 32}px)`,
+            transform: `translateY(${this.state.pullTransformDistance - 32}px)`,
             transitionDuration: `${
-              this.state.status === "refreshing" ? "200ms" : "0s"
+              this.state.status === Status.refreshing ? "200ms" : "0s"
             }`
           }}
         >
-          <div className="pull-to-refresh-indicator">
-            {this.state.status === "refreshing" && "正在刷新..."}
-            {this.state.status === "pulling" && "再使点劲！"}
-            {this.state.status === "pulling-ensure" && "好啦好啦，松手吧..."}
+          <div className="refreshing-indicator">
+            {this.state.status === Status.refreshing && "正在刷新..."}
+            {this.state.status === Status.pulling && "再使点劲！"}
+            {this.state.status === Status.pullingEnsured &&
+              "好啦好啦，松手吧..."}
           </div>
 
           {this.props.children}
 
-          <div ref={this.loadingIndicatorRef} className="loading-indicator">
-            {this.state.status === "loading" && "正在加载..."}
+          <div
+            ref={this.loadingIndicatorRef}
+            className="append-loading-indicator"
+          >
+            {this.state.status === Status.appendLoading && "正在加载..."}
             {!this.state.hasMore && "已经到最底啦！"}
           </div>
         </div>
@@ -107,12 +120,14 @@ export class InfiniteScroll extends React.PureComponent<
 
   private handleScroll = () => {
     // Both of them are related to client viewpoort origin.
-    const anchor = this.loadingIndicatorRef.current.getBoundingClientRect().top;
-    const baseline = window.innerHeight - this.props.loadMoreThreshold;
+    const anchor =
+      this.isMount &&
+      this.loadingIndicatorRef.current!.getBoundingClientRect().top;
+    const baseline = window.innerHeight - this.props.appendMoreThreshold;
 
     if (
       this.state.hasMore &&
-      this.state.status === "init" &&
+      this.state.status === Status.normal &&
       anchor <= baseline
     ) {
       this.loadMore();
@@ -122,22 +137,22 @@ export class InfiniteScroll extends React.PureComponent<
   private loadMore = async () => {
     this.isMount &&
       this.setState({
-        status: "loading"
+        status: Status.appendLoading
       });
 
-    let loadedCount;
+    let loadedCount = 0;
     try {
-      loadedCount = await this.props.loadMore();
+      loadedCount = await this.props.appendMore();
     } catch {
       this.isMount &&
         this.setState({
-          status: "init"
+          status: Status.normal
         });
     }
 
     this.isMount &&
       this.setState({
-        status: "init",
+        status: Status.normal,
         hasMore: loadedCount > 0 ? true : false
       });
   };
@@ -146,7 +161,7 @@ export class InfiniteScroll extends React.PureComponent<
     if (!this.isRefreshAvaible()) return;
 
     if (e.touches.length === 1 && window.scrollY <= 0) {
-      if (this.state.pullHeight > 0) {
+      if (this.state.pullTransformDistance > 0) {
         e.preventDefault();
       }
 
@@ -157,27 +172,25 @@ export class InfiniteScroll extends React.PureComponent<
   private touchMove = (e: TouchEvent) => {
     if (!this.isRefreshAvaible()) return;
 
-    // multi or y >= 0
+    // Bypss multi-figure and normal scroll cases
     if (e.touches.length !== 1 || window.scrollY > 0) {
       return;
     }
 
-    let distance = e.touches[0].clientY - this.initialTouchClientY;
+    const distance = e.touches[0].clientY - this.initialTouchClientY;
 
     if (distance > 0) {
-      const pullHeight = easing(distance);
+      // Prevent from scrolling wechat webview!
+      e.cancelable && e.preventDefault();
 
-      if (distance) {
-        // Prevent to scroll wechat webview!
-        e.cancelable && e.preventDefault();
-      }
+      const pullHeight = easing(distance);
 
       this.setState({
         status:
           pullHeight > this.props.pullingEnsureThreshold
-            ? "pulling-ensure"
-            : "pulling",
-        pullHeight: pullHeight
+            ? Status.pullingEnsured
+            : Status.pulling,
+        pullTransformDistance: pullHeight
       });
     }
   };
@@ -185,38 +198,49 @@ export class InfiniteScroll extends React.PureComponent<
   private touchEnd = (e: TouchEvent) => {
     if (!this.isRefreshAvaible()) return;
 
-    if (this.state.status === "pulling-ensure") {
-      this.refresh();
+    if (this.state.status === Status.pullingEnsured) {
+      this.prefixMore();
 
       this.setState({
-        pullHeight: 32 // Ensure the refreshing icon is visible.
+        pullTransformDistance: 32 // Ensure the refreshing icon is visible.
       });
     } else {
       this.setState({
-        status: "init",
-        pullHeight: 0
+        status: Status.normal,
+        pullTransformDistance: 0
       });
     }
   };
 
-  private refresh = async () => {
+  private prefixMore = async () => {
     // refreshing
-    this.setState({
-      status: "refreshing"
-    });
+    this.isMount &&
+      this.setState({
+        status: Status.refreshing
+      });
 
-    await this.props.refresh();
+    //TODO: How should we use this?
+    let addNewCount = 0;
+    try {
+      addNewCount = await this.props.refresher();
+    } catch {
+      this.isMount &&
+        this.setState({
+          status: Status.normal,
+          pullTransformDistance: 0
+        });
+    }
 
     this.setState({
-      status: "init",
-      pullHeight: 0
+      status: Status.normal,
+      pullTransformDistance: 0
     });
   };
 
   private isRefreshAvaible = () => {
     return (
-      this.props.refresh &&
-      !["refreshing", "loading"].includes(this.state.status)
+      this.props.refresher &&
+      ![Status.refreshing, Status.appendLoading].includes(this.state.status)
     );
   };
 }
@@ -226,7 +250,7 @@ const MainWrapper = styled.div`
   flex-direction: column;
   align-items: center;
 
-  .loading-indicator {
+  .append-loading-indicator {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -236,7 +260,7 @@ const MainWrapper = styled.div`
     font-size: 16px;
   }
 
-  .pull-to-refresh-indicator {
+  .refreshing-indicator {
     display: flex;
     justify-content: center;
     align-items: center;

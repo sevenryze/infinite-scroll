@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { hot } from "react-hot-loader";
 import styled from "styled-components";
 import { InfiniteScroll } from "./component";
@@ -6,12 +6,19 @@ import { InfiniteScroll } from "./component";
 export class App extends React.Component<
   {},
   {
-    cardList: any[];
+    cardList: {
+      id: number;
+      height: number;
+    }[];
   }
 > {
-  state = {
-    cardList: []
-  };
+  constructor(props: object) {
+    super(props);
+
+    this.state = {
+      cardList: []
+    };
+  }
 
   async componentDidMount() {
     await this.getMoreCards();
@@ -23,9 +30,9 @@ export class App extends React.Component<
         <div className="header" />
 
         <InfiniteScroll
-          loadMore={this.getMoreCards}
-          refresh={this.refresh}
-          loadMoreThreshold={20}
+          appendMore={this.getMoreCards}
+          refresher={this.refresh}
+          appendMoreThreshold={20}
           pullingEnsureThreshold={80}
         >
           {this.state.cardList.map(this.renderItem)}
@@ -44,7 +51,7 @@ export class App extends React.Component<
     let newData = getData(5);
 
     this.setState({
-      cardList: newData
+      cardList: newData.concat(this.state.cardList)
     });
 
     return newData.length;
@@ -66,7 +73,7 @@ export class App extends React.Component<
     return newData.length;
   };
 
-  private renderItem = (item, index) => {
+  private renderItem = (item: any, index: number) => {
     return (
       <div
         className="item"
@@ -86,7 +93,7 @@ export class App extends React.Component<
   };
 }
 
-function getData(num, from = 0) {
+function getData(num: number, from = 0) {
   return new Array(num).fill(1).map((_, index) => ({
     id: from + index,
     height: Math.ceil(Math.random() * 50) + 50

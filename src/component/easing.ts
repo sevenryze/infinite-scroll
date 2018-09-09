@@ -1,5 +1,5 @@
 // easeOutSine
-export function easing(distance) {
+export function easing(distance: number) {
   // t: current time, b: beginning value, c: change in value, d: duration
   const t = distance;
   const b = 0;
