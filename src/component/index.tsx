@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { easing } from "./easing";
+import throttle from "lodash.throttle";
 
 enum Status {
   normal,
@@ -10,49 +11,48 @@ enum Status {
   pullingEnsured
 }
 
-export class InfiniteScroll extends React.PureComponent<
-  {
-    /**
-     * We will call this method to load more items appended to the origin list, on the time we scrolling cross the `appendMoreThreshold`.
-     *
-     * This method should return a counter promise to resolve or reject on single loading action.
-     *
-     * @returns How many new items have been appended?
-     */
-    appendMore: () => Promise<number>;
+interface IState {
+  status: Status;
+  /**
+   * We use this flag to indicate whether there are more list items.
+   * When we see this flag to false, the footer should show something like `There is no list item any more!`.
+   */
+  hasMore: boolean;
 
-    /**
-     * We will call this method to load items prefixed to the origin list or refresh page, according to your cases,
-     * on the time we pulling cross the `pullingEnsureThreshold`.
-     *
-     * This method must return a promise to resolve or reject on single refresh action.
-     *
-     * @returns How many new items have been refresh?
-     */
-    refresher: () => Promise<number>;
+  pullTransformDistance: number;
+}
 
-    /**
-     * How many pixels to the bottom of list we should trigger to load more.
-     */
-    appendMoreThreshold: number;
+export class InfiniteScroll extends React.PureComponent<{
+  /**
+   * We will call this method to load more items appended to the origin list, on the time we scrolling cross the `appendMoreThreshold`.
+   *
+   * This method should return a counter promise to resolve or reject on single loading action.
+   *
+   * @returns How many new items have been appended?
+   */
+  appendMore: () => Promise<number>;
 
-    /**
-     * How many pixels when we pulling the list to take the refresh action.
-     */
-    pullingEnsureThreshold: number;
-  },
-  {
-    status: Status;
-    /**
-     * We use this flag to indicate whether there are more list items.
-     * When we see this flag to false, the footer should show something like `There is no list item any more!`.
-     */
-    hasMore: boolean;
+  /**
+   * We will call this method to load items prefixed to the origin list or refresh page, according to your cases,
+   * on the time we pulling cross the `pullingEnsureThreshold`.
+   *
+   * This method must return a promise to resolve or reject on single refresh action.
+   *
+   * @returns How many new items have been refresh?
+   */
+  refresher: () => Promise<number>;
 
-    pullTransformDistance: number;
-  }
-> {
-  state = {
+  /**
+   * How many pixels to the bottom of list we should trigger to load more.
+   */
+  appendMoreThreshold: number;
+
+  /**
+   * How many pixels when we pulling the list to take the refresh action.
+   */
+  pullingEnsureThreshold: number;
+}> {
+  state: IState = {
     status: Status.normal,
     hasMore: true,
     pullTransformDistance: 0
@@ -66,7 +66,7 @@ export class InfiniteScroll extends React.PureComponent<
   componentDidMount() {
     this.isMount = true;
 
-    window.addEventListener("scroll", this.handleScroll);
+    window.addEventListener("scroll", this.throttledScrollHandler);
     this.wrapperRef.current!.addEventListener("touchstart", this.touchStart, {
       passive: false
     });
@@ -79,7 +79,7 @@ export class InfiniteScroll extends React.PureComponent<
   componentWillUnmount() {
     this.isMount = false;
 
-    window.removeEventListener("scroll", this.handleScroll);
+    window.removeEventListener("scroll", this.throttledScrollHandler);
     this.wrapperRef.current!.removeEventListener("touchstart", this.touchStart);
     this.wrapperRef.current!.removeEventListener("touchmove", this.touchMove);
     this.wrapperRef.current!.removeEventListener("touchend", this.touchEnd);
@@ -134,6 +134,11 @@ export class InfiniteScroll extends React.PureComponent<
     }
   };
 
+  private throttledScrollHandler = throttle(this.handleScroll, 200, {
+    trailing: true,
+    leading: false
+  });
+
   private loadMore = async () => {
     this.isMount &&
       this.setState({
@@ -155,6 +160,31 @@ export class InfiniteScroll extends React.PureComponent<
         status: Status.normal,
         hasMore: loadedCount > 0 ? true : false
       });
+  };
+
+  private prefixMore = async () => {
+    // refreshing
+    this.isMount &&
+      this.setState({
+        status: Status.refreshing
+      });
+
+    //TODO: How should we use this?
+    let addNewCount = 0;
+    try {
+      addNewCount = await this.props.refresher();
+    } catch {
+      this.isMount &&
+        this.setState({
+          status: Status.normal,
+          pullTransformDistance: 0
+        });
+    }
+
+    this.setState({
+      status: Status.normal,
+      pullTransformDistance: 0
+    });
   };
 
   private touchStart = (e: TouchEvent) => {
@@ -210,31 +240,6 @@ export class InfiniteScroll extends React.PureComponent<
         pullTransformDistance: 0
       });
     }
-  };
-
-  private prefixMore = async () => {
-    // refreshing
-    this.isMount &&
-      this.setState({
-        status: Status.refreshing
-      });
-
-    //TODO: How should we use this?
-    let addNewCount = 0;
-    try {
-      addNewCount = await this.props.refresher();
-    } catch {
-      this.isMount &&
-        this.setState({
-          status: Status.normal,
-          pullTransformDistance: 0
-        });
-    }
-
-    this.setState({
-      status: Status.normal,
-      pullTransformDistance: 0
-    });
   };
 
   private isRefreshAvaible = () => {

@@ -1,3 +1,24 @@
+# Table of Content
+
+<!-- prettier-ignore-start -->
+
+<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
+* [Table of Content](#table-of-content)
+* [Install](#install)
+* [Usage](#usage)
+	* [Use the `window` object as the global scroller](#use-the-window-object-as-the-global-scroller)
+	* [Use the specific dom element as local scroller](#use-the-specific-dom-element-as-local-scroller)
+* [API](#api)
+	* [`InfiniteScroll`](#infinitescroll)
+* [Build and Test](#build-and-test)
+
+<!-- /code_chunk_output -->
+
+<!-- prettier-ignore-end -->
+
 # Install
 
 The only component exposed to external is `InfiniteScroll`. And use install script like below:
@@ -11,118 +32,53 @@ npm install --save @sevenryze/infinite-scroll
 ## Use the `window` object as the global scroller
 
 ```JavaScript
-import * as React from "react";
-import styled from "styled-components";
-import { InfiniteScroll } from "./component";
-import { hot } from "react-hot-loader";
+<InfiniteScroll
+  loadMore={this.getMoreCards}
+  refresh={this.refresh}
+  loadMoreThreshold={20}
+  pullingEnsureThreshold={80}
+>
+  {this.state.cardList.map(this.renderItem)}
+</InfiniteScroll>
 
-/**********************************************************************************************************************/
-import * as React from "react";
-import { hot } from "react-hot-loader";
-import styled from "styled-components";
-import { InfiniteScroll } from "./component";
+refresh = async () => {
+  let newData = getData(5);
 
-export class App extends React.Component<
-  {},
-  {
-    cardList: any[];
-  }
-> {
-  state = {
-    cardList: []
-  };
+  this.setState({
+    cardList: newData
+  });
 
-  async componentDidMount() {
-    await this.getMoreCards();
-  }
+  return newData.length;
+};
 
-  render() {
-    return (
-      <MainWrapper>
-        <div className="header" />
+getMoreCards = async () => {
+  let newData = getData(5);
 
-        <InfiniteScroll
-          loadMore={this.getMoreCards}
-          refresh={this.refresh}
-          loadMoreThreshold={20}
-          pullingEnsureThreshold={80}
-        >
-          {this.state.cardList.map(this.renderItem)}
-        </InfiniteScroll>
-      </MainWrapper>
-    );
-  }
+  this.setState({
+    cardList: this.state.cardList.concat(newData)
+  });
 
-  private refresh = async () => {
-    await new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, 2000);
-    });
+  return newData.length;
+};
 
-    let newData = getData(5);
-
-    this.setState({
-      cardList: newData
-    });
-
-    return newData.length;
-  };
-
-  private getMoreCards = async () => {
-    await new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, 2000);
-    });
-
-    let newData = getData(5);
-
-    this.setState({
-      cardList: this.state.cardList.concat(newData)
-    });
-
-    return newData.length;
-  };
-
-  private renderItem = (item, index) => {
-    return (
-      <div
-        className="item"
-        style={{
-          ...(index % 2 !== 0
-            ? { backgroundColor: "red" }
-            : { backgroundColor: "#ccc" })
-        }}
-        js-index={index}
-        key={index}
-      >
-        {`index: ${index}, id: ${item.id}` +
-          ` ----------- ` +
-          "tower edu is awesome, ".repeat(item.height + 10)}
-      </div>
-    );
-  };
-}
-
-function getData(num, from = 0) {
-  return new Array(num).fill(1).map((_, index) => ({
-    id: from + index,
-    height: Math.ceil(Math.random() * 50) + 50
-  }));
-}
-
-const MainWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-
-  .header {
-    background: rgba(0, 0, 0, 0.3);
-    min-height: 5rem;
-  }
-`;
-
-export default hot(module)(App);
+renderItem = (item, index) => {
+  return (
+    <div
+      className="item"
+      style={{
+        ...(index % 2 !== 0
+          ? { backgroundColor: "red" }
+          : { backgroundColor: "#ccc" })
+      }}
+      js-index={index}
+      key={index}
+    >
+      {`index: ${index}, id: ${item.id}` +
+        ` ----------- ` +
+        "tower edu is awesome, ".repeat(item.height + 10)}
+    </div>
+  );
+};
 ```
 
 ## Use the specific dom element as local scroller
@@ -144,14 +100,14 @@ This lib exposes only one public class: `InfiniteScroll`.
 />
 ```
 
-- `loadMore: () => Promise<number>`: The scroller will invoke this method when we scroll cross the threshold. You should return the loaded items count.
-- `refresh: ()=>Promise<number>`: The refresher.
+- `loadMore: () => Promise<number>`: The scroller will invoke this method when we scroll cross the threshold. You should return the count of loaded items.
+- `refresh: () => Promise<number>`: The refresher, the same usage as `loadMore`.
 - `loadMoreThreshold: number`: The threshold to the bottom of rendered list.
 - `pullingEnsureThreshold: number`: The threshold we pull to refresh.
 
 # Build and Test
 
-Build? you'll use this one and forget others hand-tired works.
+Build? you shall use this one and forget other hand-tired works.
 
 ---
 
@@ -162,7 +118,6 @@ Build? you'll use this one and forget others hand-tired works.
     <tr>
       <td align="center">
         <img width="150" height="150" src="https://avatars.githubusercontent.com/sevenryze?v=3">
-        </br>
         <a href="https://github.com/sevenryze">Seven Ryze</a>
       </td>
     </tr>

@@ -1,6 +1,6 @@
 {
   "name": "@sevenryze/infinite-scroll",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "files": [
     "dist/component"
   ],
@@ -11,22 +11,22 @@
     "url": "git+https://github.com/sevenryze/infinite-scroll.git"
   },
   "devDependencies": {
-    "@types/react": "^16.4.13",
+    "@babel/core": "^7.1.0",
+    "@types/react": "^16.4.14",
     "@types/react-dom": "^16.0.7",
-    "@types/styled-components": "^3.0.0",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
+    "@types/styled-components": "^3.0.1",
+    "babel-loader": "^8.0.2",
     "file-loader": "^2.0.0",
     "html-webpack-plugin": "^3.2.0",
-    "prettier": "^1.14.2",
-    "react": "^16.5.0",
-    "react-dom": "^16.5.0",
-    "react-hot-loader": "^4.3.6",
-    "styled-components": "^4.0.0-beta.1-2",
-    "ts-loader": "^5.0.0",
-    "typescript": "next",
-    "typescript-styled-plugin": "^0.10.0",
-    "webpack": "^4.17.2",
+    "prettier": "^1.14.3",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "react-hot-loader": "^4.3.11",
+    "styled-components": "^4.0.0-beta.8-unpure",
+    "ts-loader": "^5.1.1",
+    "typescript": "^3.1.0-rc",
+    "typescript-styled-plugin": "^0.11.0",
+    "webpack": "^4.19.1",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "^3.1.8"
   },
@@ -38,5 +38,9 @@
     "dev": "webpack-dev-server --config webpack-config.js --hot",
     "build": "tsc --project .",
     "commit-to-npm": "npm run build && npm publish --access=public"
+  },
+  "dependencies": {
+    "@types/lodash.throttle": "^4.1.4",
+    "lodash.throttle": "^4.1.1"
   }
 }

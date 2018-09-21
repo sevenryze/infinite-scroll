@@ -3,22 +3,17 @@ import { hot } from "react-hot-loader";
 import styled from "styled-components";
 import { InfiniteScroll } from "./component";
 
-export class App extends React.Component<
-  {},
-  {
-    cardList: {
-      id: number;
-      height: number;
-    }[];
-  }
-> {
-  constructor(props: object) {
-    super(props);
+interface IState {
+  cardList: {
+    id: number;
+    height: number;
+  }[];
+}
 
-    this.state = {
-      cardList: []
-    };
-  }
+export class App extends React.Component<{}> {
+  state: IState = {
+    cardList: []
+  };
 
   async componentDidMount() {
     await this.getMoreCards();
@@ -35,7 +30,7 @@ export class App extends React.Component<
           appendMoreThreshold={20}
           pullingEnsureThreshold={80}
         >
-          {this.state.cardList.map(this.renderItem)}
+          {this.state.cardList.map(this.itemRenderer)}
         </InfiniteScroll>
       </MainWrapper>
     );
@@ -73,7 +68,7 @@ export class App extends React.Component<
     return newData.length;
   };
 
-  private renderItem = (item: any, index: number) => {
+  private itemRenderer = (item: any, index: number) => {
     return (
       <div
         className="item"
