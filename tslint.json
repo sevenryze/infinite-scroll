@@ -1,0 +1,22 @@
+{
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "no-unused-expression": [true, "allow-fast-null-checks"],
+    "member-ordering": [
+      false,
+      {
+        "order": [
+          "public-static-field",
+          "public-instance-field",
+          "public-constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-static-field",
+          "private-instance-field",
+          "private-constructor",
+          "private-instance-method"
+        ]
+      }
+    ]
+  }
+}

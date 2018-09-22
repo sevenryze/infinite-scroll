@@ -4,22 +4,22 @@ import styled from "styled-components";
 import { InfiniteScroll } from "./component";
 
 interface IState {
-  cardList: {
+  cardList: Array<{
     id: number;
     height: number;
-  }[];
+  }>;
 }
 
-export class App extends React.Component<{}> {
-  state: IState = {
+export class App extends React.Component<{}, IState> {
+  public state: IState = {
     cardList: []
   };
 
-  async componentDidMount() {
+  public async componentDidMount() {
     await this.getMoreCards();
   }
 
-  render() {
+  public render() {
     return (
       <MainWrapper>
         <div className="header" />
@@ -43,7 +43,7 @@ export class App extends React.Component<{}> {
       }, 2000);
     });
 
-    let newData = getData(5);
+    const newData = getData(5);
 
     this.setState({
       cardList: newData.concat(this.state.cardList)
@@ -59,7 +59,7 @@ export class App extends React.Component<{}> {
       }, 2000);
     });
 
-    let newData = getData(5);
+    const newData = getData(5);
 
     this.setState({
       cardList: this.state.cardList.concat(newData)
@@ -73,16 +73,12 @@ export class App extends React.Component<{}> {
       <div
         className="item"
         style={{
-          ...(index % 2 !== 0
-            ? { backgroundColor: "red" }
-            : { backgroundColor: "#ccc" })
+          ...(index % 2 !== 0 ? { backgroundColor: "red" } : { backgroundColor: "#ccc" })
         }}
         js-index={index}
         key={index}
       >
-        {`index: ${index}, id: ${item.id}` +
-          ` ----------- ` +
-          "tower edu is awesome, ".repeat(item.height + 10)}
+        {`index: ${index}, id: ${item.id}` + ` ----------- ` + "tower edu is awesome, ".repeat(item.height + 10)}
       </div>
     );
   };
@@ -90,8 +86,8 @@ export class App extends React.Component<{}> {
 
 function getData(num: number, from = 0) {
   return new Array(num).fill(1).map((_, index) => ({
-    id: from + index,
-    height: Math.ceil(Math.random() * 50) + 50
+    height: Math.ceil(Math.random() * 50) + 50,
+    id: from + index
   }));
 }
 

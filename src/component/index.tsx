@@ -1,7 +1,7 @@
+import throttle from "lodash.throttle";
 import React from "react";
 import styled from "styled-components";
 import { easing } from "./easing";
-import throttle from "lodash.throttle";
 
 enum Status {
   normal,
@@ -52,10 +52,10 @@ export class InfiniteScroll extends React.PureComponent<{
    */
   pullingEnsureThreshold: number;
 }> {
-  state: IState = {
-    status: Status.normal,
+  public state: IState = {
     hasMore: true,
-    pullTransformDistance: 0
+    pullTransformDistance: 0,
+    status: Status.normal
   };
 
   private isMount = false;
@@ -63,7 +63,7 @@ export class InfiniteScroll extends React.PureComponent<{
   private wrapperRef = React.createRef<HTMLDivElement>();
   private initialTouchClientY = 0;
 
-  componentDidMount() {
+  public componentDidMount() {
     this.isMount = true;
 
     window.addEventListener("scroll", this.throttledScrollHandler);
@@ -76,7 +76,7 @@ export class InfiniteScroll extends React.PureComponent<{
     this.wrapperRef.current!.addEventListener("touchend", this.touchEnd);
   }
 
-  componentWillUnmount() {
+  public componentWillUnmount() {
     this.isMount = false;
 
     window.removeEventListener("scroll", this.throttledScrollHandler);
@@ -85,31 +85,25 @@ export class InfiniteScroll extends React.PureComponent<{
     this.wrapperRef.current!.removeEventListener("touchend", this.touchEnd);
   }
 
-  render() {
+  public render() {
     return (
       <MainWrapper>
         <div
           ref={this.wrapperRef}
           style={{
             transform: `translateY(${this.state.pullTransformDistance - 32}px)`,
-            transitionDuration: `${
-              this.state.status === Status.refreshing ? "200ms" : "0s"
-            }`
+            transitionDuration: `${this.state.status === Status.refreshing ? "200ms" : "0s"}`
           }}
         >
           <div className="refreshing-indicator">
             {this.state.status === Status.refreshing && "正在刷新..."}
             {this.state.status === Status.pulling && "再使点劲！"}
-            {this.state.status === Status.pullingEnsured &&
-              "好啦好啦，松手吧..."}
+            {this.state.status === Status.pullingEnsured && "好啦好啦，松手吧..."}
           </div>
 
           {this.props.children}
 
-          <div
-            ref={this.loadingIndicatorRef}
-            className="append-loading-indicator"
-          >
+          <div ref={this.loadingIndicatorRef} className="append-loading-indicator">
             {this.state.status === Status.appendLoading && "正在加载..."}
             {!this.state.hasMore && "已经到最底啦！"}
           </div>
@@ -120,23 +114,17 @@ export class InfiniteScroll extends React.PureComponent<{
 
   private handleScroll = () => {
     // Both of them are related to client viewpoort origin.
-    const anchor =
-      this.isMount &&
-      this.loadingIndicatorRef.current!.getBoundingClientRect().top;
+    const anchor = this.isMount && this.loadingIndicatorRef.current!.getBoundingClientRect().top;
     const baseline = window.innerHeight - this.props.appendMoreThreshold;
 
-    if (
-      this.state.hasMore &&
-      this.state.status === Status.normal &&
-      anchor <= baseline
-    ) {
+    if (this.state.hasMore && this.state.status === Status.normal && anchor <= baseline) {
       this.loadMore();
     }
   };
 
   private throttledScrollHandler = throttle(this.handleScroll, 200, {
-    trailing: true,
-    leading: false
+    leading: false,
+    trailing: true
   });
 
   private loadMore = async () => {
@@ -157,8 +145,8 @@ export class InfiniteScroll extends React.PureComponent<{
 
     this.isMount &&
       this.setState({
-        status: Status.normal,
-        hasMore: loadedCount > 0 ? true : false
+        hasMore: loadedCount > 0 ? true : false,
+        status: Status.normal
       });
   };
 
@@ -169,26 +157,28 @@ export class InfiniteScroll extends React.PureComponent<{
         status: Status.refreshing
       });
 
-    //TODO: How should we use this?
+    // TODO: How should we use this?
     let addNewCount = 0;
     try {
       addNewCount = await this.props.refresher();
     } catch {
       this.isMount &&
         this.setState({
-          status: Status.normal,
-          pullTransformDistance: 0
+          pullTransformDistance: 0,
+          status: Status.normal
         });
     }
 
     this.setState({
-      status: Status.normal,
-      pullTransformDistance: 0
+      pullTransformDistance: 0,
+      status: Status.normal
     });
   };
 
   private touchStart = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) return;
+    if (!this.isRefreshAvaible()) {
+      return;
+    }
 
     if (e.touches.length === 1 && window.scrollY <= 0) {
       if (this.state.pullTransformDistance > 0) {
@@ -200,7 +190,9 @@ export class InfiniteScroll extends React.PureComponent<{
   };
 
   private touchMove = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) return;
+    if (!this.isRefreshAvaible()) {
+      return;
+    }
 
     // Bypss multi-figure and normal scroll cases
     if (e.touches.length !== 1 || window.scrollY > 0) {
@@ -216,17 +208,16 @@ export class InfiniteScroll extends React.PureComponent<{
       const pullHeight = easing(distance);
 
       this.setState({
-        status:
-          pullHeight > this.props.pullingEnsureThreshold
-            ? Status.pullingEnsured
-            : Status.pulling,
-        pullTransformDistance: pullHeight
+        pullTransformDistance: pullHeight,
+        status: pullHeight > this.props.pullingEnsureThreshold ? Status.pullingEnsured : Status.pulling
       });
     }
   };
 
   private touchEnd = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) return;
+    if (!this.isRefreshAvaible()) {
+      return;
+    }
 
     if (this.state.status === Status.pullingEnsured) {
       this.prefixMore();
@@ -236,17 +227,14 @@ export class InfiniteScroll extends React.PureComponent<{
       });
     } else {
       this.setState({
-        status: Status.normal,
-        pullTransformDistance: 0
+        pullTransformDistance: 0,
+        status: Status.normal
       });
     }
   };
 
   private isRefreshAvaible = () => {
-    return (
-      this.props.refresher &&
-      ![Status.refreshing, Status.appendLoading].includes(this.state.status)
-    );
+    return this.props.refresher && ![Status.refreshing, Status.appendLoading].includes(this.state.status);
   };
 }
 

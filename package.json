@@ -24,6 +24,8 @@
     "react-hot-loader": "^4.3.11",
     "styled-components": "^4.0.0-beta.8-unpure",
     "ts-loader": "^5.1.1",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
     "typescript": "^3.1.0-rc",
     "typescript-styled-plugin": "^0.11.0",
     "webpack": "^4.19.1",
@@ -37,7 +39,9 @@
   "scripts": {
     "dev": "webpack-dev-server --config webpack-config.js --hot",
     "build": "tsc --project .",
-    "commit-to-npm": "npm run build && npm publish --access=public"
+    "commit-to-npm": "npm run build && npm publish --access=public",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json"
   },
   "dependencies": {
     "@types/lodash.throttle": "^4.1.4",
