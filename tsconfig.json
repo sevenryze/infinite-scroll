@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "es2015",
+    "module": "esnext",
     "moduleResolution": "node",
     "target": "es2016",
     "allowSyntheticDefaultImports": true,
@@ -19,5 +19,6 @@
       }
     ]
   },
-  "include": ["src/**/*"]
+
+  "include": ["lib", "typings"]
 }

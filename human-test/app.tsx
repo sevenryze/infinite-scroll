@@ -1,7 +1,7 @@
 import React from "react";
 import { hot } from "react-hot-loader";
 import styled from "styled-components";
-import { InfiniteScroll } from "./component";
+import { InfiniteScroll } from "../lib";
 
 interface IState {
   cardList: Array<{
@@ -96,7 +96,7 @@ const MainWrapper = styled.div`
   flex-direction: column;
 
   .header {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(32, 255, 255, 0.3);
     min-height: 5rem;
   }
 `;

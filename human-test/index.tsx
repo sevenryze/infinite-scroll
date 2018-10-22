@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-// @ts-ignore
 import { createGlobalStyle } from "styled-components";
 import App from "./app";
 

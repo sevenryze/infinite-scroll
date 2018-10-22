@@ -205,7 +205,7 @@ export class InfiniteScroll extends React.PureComponent<{
       // Prevent from scrolling wechat webview!
       e.cancelable && e.preventDefault();
 
-      const pullHeight = easing(distance);
+      const pullHeight = easing(distance, window.screen.availHeight);
 
       this.setState({
         pullTransformDistance: pullHeight,
