@@ -100,10 +100,10 @@ This lib exposes only one public class: `InfiniteScroll`.
 />
 ```
 
-- `loadMore: () => Promise<number>`: The scroller will invoke this method when we scroll cross the threshold. You should return the count of loaded items.
+- `loadMore: () => Promise<number>`: The scroller will invoke this method when scrolled cross the threshold. You should return the count of loaded items.
 - `refresh: () => Promise<number>`: The refresher, the same usage as `loadMore`.
 - `loadMoreThreshold: number`: The threshold to the bottom of rendered list.
-- `pullingEnsureThreshold: number`: The threshold we pull to refresh.
+- `pullingEnsureThreshold: number`: The threshold pulling to refresh.
 
 # Build and Test
 

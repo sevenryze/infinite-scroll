@@ -33,8 +33,11 @@
       "request": "launch",
       "name": "Launch Chrome against localhost 8080",
       "url": "http://localhost:8080",
+      "showAsyncStacks": true,
+      "sourceMaps": true,
       "smartStep": true,
-      "skipFiles": ["**/node_modules/**"]
+      "skipFiles": ["${workspaceFolder}/node_modules/**/*.js"],
+      "webRoot": "${workspaceFolder}"
     }
   ]
 }
