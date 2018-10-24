@@ -42,8 +42,6 @@ npm install --save @sevenryze/infinite-scroll
 </InfiniteScroll>
 
 refresh = async () => {
-  let newData = getData(5);
-
   this.setState({
     cardList: newData
   });
@@ -52,32 +50,11 @@ refresh = async () => {
 };
 
 getMoreCards = async () => {
-  let newData = getData(5);
-
   this.setState({
     cardList: this.state.cardList.concat(newData)
   });
 
   return newData.length;
-};
-
-renderItem = (item, index) => {
-  return (
-    <div
-      className="item"
-      style={{
-        ...(index % 2 !== 0
-          ? { backgroundColor: "red" }
-          : { backgroundColor: "#ccc" })
-      }}
-      js-index={index}
-      key={index}
-    >
-      {`index: ${index}, id: ${item.id}` +
-        ` ----------- ` +
-        "tower edu is awesome, ".repeat(item.height + 10)}
-    </div>
-  );
 };
 ```
 

@@ -7,10 +7,16 @@ import { Status } from "./interface";
 type IState = Readonly<{
   status: Status;
   /**
-   * We use this flag to indicate whether there are more list items.
+   * We use this flag to indicate whether there are more list items appendding.
    * When we see this flag to false, the footer should show something like `There is no list item any more!`.
    */
   hasMore: boolean;
+
+  /**
+   * We use this flag to indicate whether there are more list items could be refreshed.
+   * When we see this flag to false, the footer should show something like `Nothing refreshed, go other tabs for more info`.
+   */
+  hasRefreshMore: boolean;
 
   pullTransformDistance: number;
 }>;
@@ -47,6 +53,7 @@ export class InfiniteScroll extends React.PureComponent<{
 }> {
   public state: IState = {
     hasMore: true,
+    hasRefreshMore: true,
     pullTransformDistance: 0,
     status: Status.normal
   };
@@ -132,9 +139,9 @@ export class InfiniteScroll extends React.PureComponent<{
         status: Status.appendLoading
       });
 
-    let loadedCount = 0;
+    let loadedMoreCount = 0;
     try {
-      loadedCount = await this.props.appendMore();
+      loadedMoreCount = await this.props.appendMore();
     } catch {
       this.isMount &&
         this.setState({
@@ -144,7 +151,7 @@ export class InfiniteScroll extends React.PureComponent<{
 
     this.isMount &&
       this.setState({
-        hasMore: loadedCount > 0 ? true : false,
+        hasMore: loadedMoreCount > 0,
         status: Status.normal
       });
   };
@@ -156,7 +163,6 @@ export class InfiniteScroll extends React.PureComponent<{
         status: Status.refreshing
       });
 
-    // TODO: How should we use this?
     let addNewCount = 0;
     try {
       addNewCount = await this.props.refresher();
@@ -169,6 +175,7 @@ export class InfiniteScroll extends React.PureComponent<{
     }
 
     this.setState({
+      hasRefreshMore: addNewCount > 0,
       pullTransformDistance: 0,
       status: Status.normal
     });
