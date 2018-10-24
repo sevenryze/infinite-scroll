@@ -2,16 +2,9 @@ import throttle from "lodash.throttle";
 import React from "react";
 import styled from "styled-components";
 import { easing } from "./easing";
+import { Status } from "./interface";
 
-enum Status {
-  normal,
-  appendLoading,
-  refreshing,
-  pulling,
-  pullingEnsured
-}
-
-interface IState {
+type IState = Readonly<{
   status: Status;
   /**
    * We use this flag to indicate whether there are more list items.
@@ -20,7 +13,7 @@ interface IState {
   hasMore: boolean;
 
   pullTransformDistance: number;
-}
+}>;
 
 export class InfiniteScroll extends React.PureComponent<{
   /**
@@ -58,31 +51,30 @@ export class InfiniteScroll extends React.PureComponent<{
     status: Status.normal
   };
 
-  private isMount = false;
-  private loadingIndicatorRef = React.createRef<HTMLDivElement>();
-  private wrapperRef = React.createRef<HTMLDivElement>();
-  private initialTouchClientY = 0;
-
   public componentDidMount() {
     this.isMount = true;
 
+    const target = this.wrapperRef.current!;
+
     window.addEventListener("scroll", this.throttledScrollHandler);
-    this.wrapperRef.current!.addEventListener("touchstart", this.touchStart, {
+    target.addEventListener("touchstart", this.touchStart, {
       passive: false
     });
-    this.wrapperRef.current!.addEventListener("touchmove", this.touchMove, {
+    target.addEventListener("touchmove", this.touchMove, {
       passive: false
     });
-    this.wrapperRef.current!.addEventListener("touchend", this.touchEnd);
+    target.addEventListener("touchend", this.touchEnd);
   }
 
   public componentWillUnmount() {
     this.isMount = false;
 
+    const target = this.wrapperRef.current!;
+
     window.removeEventListener("scroll", this.throttledScrollHandler);
-    this.wrapperRef.current!.removeEventListener("touchstart", this.touchStart);
-    this.wrapperRef.current!.removeEventListener("touchmove", this.touchMove);
-    this.wrapperRef.current!.removeEventListener("touchend", this.touchEnd);
+    target.removeEventListener("touchstart", this.touchStart);
+    target.removeEventListener("touchmove", this.touchMove);
+    target.removeEventListener("touchend", this.touchEnd);
   }
 
   public render() {
@@ -112,20 +104,27 @@ export class InfiniteScroll extends React.PureComponent<{
     );
   }
 
-  private handleScroll = () => {
-    // Both of them are related to client viewpoort origin.
-    const anchor = this.isMount && this.loadingIndicatorRef.current!.getBoundingClientRect().top;
-    const baseline = window.innerHeight - this.props.appendMoreThreshold;
+  private isMount = false;
+  private loadingIndicatorRef = React.createRef<HTMLDivElement>();
+  private wrapperRef = React.createRef<HTMLDivElement>();
+  private initialTouchClientY = 0;
 
-    if (this.state.hasMore && this.state.status === Status.normal && anchor <= baseline) {
-      this.loadMore();
+  private throttledScrollHandler = throttle(
+    () => {
+      // Both of them are related to client viewpoort origin.
+      const anchor = this.isMount && this.loadingIndicatorRef.current!.getBoundingClientRect().top;
+      const baseline = window.innerHeight - this.props.appendMoreThreshold;
+
+      if (this.state.hasMore && this.state.status === Status.normal && anchor <= baseline) {
+        this.loadMore();
+      }
+    },
+    200,
+    {
+      leading: false,
+      trailing: true
     }
-  };
-
-  private throttledScrollHandler = throttle(this.handleScroll, 200, {
-    leading: false,
-    trailing: true
-  });
+  );
 
   private loadMore = async () => {
     this.isMount &&

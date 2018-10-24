@@ -1,16 +1,17 @@
 import React from "react";
+// tslint:disable-next-line:no-implicit-dependencies
 import { hot } from "react-hot-loader";
 import styled from "styled-components";
 import { InfiniteScroll } from "../lib";
 
-interface IState {
+type IState = Readonly<{
   cardList: Array<{
     id: number;
     height: number;
   }>;
-}
+}>;
 
-export class App extends React.Component<{}, IState> {
+export class App extends React.PureComponent<{}> {
   public state: IState = {
     cardList: []
   };
@@ -22,7 +23,7 @@ export class App extends React.Component<{}, IState> {
   public render() {
     return (
       <MainWrapper>
-        <div className="header" />
+        <div className="header">I'm header</div>
 
         <InfiniteScroll
           appendMore={this.getMoreCards}
@@ -98,6 +99,8 @@ const MainWrapper = styled.div`
   .header {
     background: rgba(32, 255, 255, 0.3);
     min-height: 5rem;
+    color: red;
+    font-size: 2rem;
   }
 `;
 
