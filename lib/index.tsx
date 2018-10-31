@@ -4,42 +4,17 @@ import styled from "styled-components";
 import { easing } from "./easing";
 import { Status } from "./interface";
 
-type IState = Readonly<{
-  status: Status;
-  /**
-   * We use this flag to indicate whether there are more list items appendding.
-   * When we see this flag to false, the footer should show something like `There is no list item any more!`.
-   */
-  hasMore: boolean;
-
-  /**
-   * We use this flag to indicate whether there are more list items could be refreshed.
-   * When we see this flag to false, the footer should show something like `Nothing refreshed, go other tabs for more info`.
-   */
-  hasRefreshMore: boolean;
-
-  pullTransformDistance: number;
-}>;
-
-export class InfiniteScroll extends React.PureComponent<{
+type IProps = Readonly<{
   /**
    * We will call this method to load more items appended to the origin list, on the time we scrolling cross the `appendMoreThreshold`.
-   *
-   * This method should return a counter promise to resolve or reject on single loading action.
-   *
-   * @returns How many new items have been appended?
    */
-  appendMore: () => Promise<number>;
+  appendMore: () => void;
 
   /**
    * We will call this method to load items prefixed to the origin list or refresh page, according to your cases,
    * on the time we pulling cross the `pullingEnsureThreshold`.
-   *
-   * This method must return a promise to resolve or reject on single refresh action.
-   *
-   * @returns How many new items have been refresh?
    */
-  refresher: () => Promise<number>;
+  prefixMore: () => void;
 
   /**
    * How many pixels to the bottom of list we should trigger to load more.
@@ -50,12 +25,35 @@ export class InfiniteScroll extends React.PureComponent<{
    * How many pixels when we pulling the list to take the refresh action.
    */
   pullingEnsureThreshold: number;
-}> {
+
+  /**
+   * Indicate whether we are currently on loading more append items.
+   */
+  isOnAppendLoading: boolean;
+
+  /**
+   * Indicate whether we are currently on loading more prefix items.
+   */
+  isOnPrefixLoading: boolean;
+
+  /**
+   * Do not actually call the append loading function.
+   *
+   * Useful to prevent infinite call loading function at the bottom of list,
+   * when there is no more list item to append.
+   */
+  isCloseAppendMore: boolean;
+}>;
+
+type IState = Readonly<{
+  status: Status;
+  pullTransformDistance: number;
+}>;
+
+export class InfiniteScroll extends React.PureComponent<IProps, IState> {
   public state: IState = {
-    hasMore: true,
-    hasRefreshMore: true,
     pullTransformDistance: 0,
-    status: Status.normal
+    status: Status.reset,
   };
 
   public componentDidMount() {
@@ -65,10 +63,10 @@ export class InfiniteScroll extends React.PureComponent<{
 
     window.addEventListener("scroll", this.throttledScrollHandler);
     target.addEventListener("touchstart", this.touchStart, {
-      passive: false
+      passive: false,
     });
     target.addEventListener("touchmove", this.touchMove, {
-      passive: false
+      passive: false,
     });
     target.addEventListener("touchend", this.touchEnd);
   }
@@ -85,17 +83,19 @@ export class InfiniteScroll extends React.PureComponent<{
   }
 
   public render() {
+    const transformY = this.state.pullTransformDistance - (this.props.isOnPrefixLoading ? 0 : 32);
+
     return (
       <MainWrapper>
         <div
           ref={this.wrapperRef}
           style={{
-            transform: `translateY(${this.state.pullTransformDistance - 32}px)`,
-            transitionDuration: `${this.state.status === Status.refreshing ? "200ms" : "0s"}`
+            transform: `translateY(${transformY}px)`,
+            transitionDuration: `${this.props.isOnPrefixLoading ? "200ms" : "0s"}`,
           }}
         >
-          <div className="refreshing-indicator">
-            {this.state.status === Status.refreshing && "正在刷新..."}
+          <div className="prefix-loading-indicator">
+            {this.props.isOnPrefixLoading && "正在刷新..."}
             {this.state.status === Status.pulling && "再使点劲！"}
             {this.state.status === Status.pullingEnsured && "好啦好啦，松手吧..."}
           </div>
@@ -103,8 +103,8 @@ export class InfiniteScroll extends React.PureComponent<{
           {this.props.children}
 
           <div ref={this.loadingIndicatorRef} className="append-loading-indicator">
-            {this.state.status === Status.appendLoading && "正在加载..."}
-            {!this.state.hasMore && "已经到最底啦！"}
+            {this.props.isOnAppendLoading && "正在加载..."}
+            {this.props.isCloseAppendMore && "已经到最底啦！"}
           </div>
         </div>
       </MainWrapper>
@@ -118,71 +118,27 @@ export class InfiniteScroll extends React.PureComponent<{
 
   private throttledScrollHandler = throttle(
     () => {
+      if (this.props.isCloseAppendMore || this.props.isOnAppendLoading) {
+        return;
+      }
+
       // Both of them are related to client viewpoort origin.
       const anchor = this.isMount && this.loadingIndicatorRef.current!.getBoundingClientRect().top;
       const baseline = window.innerHeight - this.props.appendMoreThreshold;
 
-      if (this.state.hasMore && this.state.status === Status.normal && anchor <= baseline) {
-        this.loadMore();
+      if (this.state.status === Status.reset && anchor <= baseline) {
+        this.props.appendMore();
       }
     },
     200,
     {
       leading: false,
-      trailing: true
+      trailing: true,
     }
   );
 
-  private loadMore = async () => {
-    this.isMount &&
-      this.setState({
-        status: Status.appendLoading
-      });
-
-    let loadedMoreCount = 0;
-    try {
-      loadedMoreCount = await this.props.appendMore();
-    } catch {
-      this.isMount &&
-        this.setState({
-          status: Status.normal
-        });
-    }
-
-    this.isMount &&
-      this.setState({
-        hasMore: loadedMoreCount > 0,
-        status: Status.normal
-      });
-  };
-
-  private prefixMore = async () => {
-    // refreshing
-    this.isMount &&
-      this.setState({
-        status: Status.refreshing
-      });
-
-    let addNewCount = 0;
-    try {
-      addNewCount = await this.props.refresher();
-    } catch {
-      this.isMount &&
-        this.setState({
-          pullTransformDistance: 0,
-          status: Status.normal
-        });
-    }
-
-    this.setState({
-      hasRefreshMore: addNewCount > 0,
-      pullTransformDistance: 0,
-      status: Status.normal
-    });
-  };
-
   private touchStart = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) {
+    if (!this.isPrefixLoadAvaible()) {
       return;
     }
 
@@ -196,7 +152,7 @@ export class InfiniteScroll extends React.PureComponent<{
   };
 
   private touchMove = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) {
+    if (!this.isPrefixLoadAvaible()) {
       return;
     }
 
@@ -215,32 +171,28 @@ export class InfiniteScroll extends React.PureComponent<{
 
       this.setState({
         pullTransformDistance: pullHeight,
-        status: pullHeight > this.props.pullingEnsureThreshold ? Status.pullingEnsured : Status.pulling
+        status: pullHeight > this.props.pullingEnsureThreshold ? Status.pullingEnsured : Status.pulling,
       });
     }
   };
 
   private touchEnd = (e: TouchEvent) => {
-    if (!this.isRefreshAvaible()) {
+    if (!this.isPrefixLoadAvaible()) {
       return;
     }
 
     if (this.state.status === Status.pullingEnsured) {
-      this.prefixMore();
-
-      this.setState({
-        pullTransformDistance: 32 // Ensure the refreshing icon is visible.
-      });
-    } else {
-      this.setState({
-        pullTransformDistance: 0,
-        status: Status.normal
-      });
+      this.props.prefixMore();
     }
+
+    this.setState({
+      pullTransformDistance: 0,
+      status: Status.reset,
+    });
   };
 
-  private isRefreshAvaible = () => {
-    return this.props.refresher && ![Status.refreshing, Status.appendLoading].includes(this.state.status);
+  private isPrefixLoadAvaible = () => {
+    return this.props.prefixMore && !this.props.isOnAppendLoading;
   };
 }
 
@@ -259,13 +211,13 @@ const MainWrapper = styled.div`
     font-size: 16px;
   }
 
-  .refreshing-indicator {
+  .prefix-loading-indicator {
     display: flex;
     justify-content: center;
     align-items: center;
 
-    height: 32px;
-
     font-size: 16px;
+
+    height: 32px;
   }
 `;

@@ -5,15 +5,21 @@ import styled from "styled-components";
 import { InfiniteScroll } from "../lib";
 
 type IState = Readonly<{
+  isOnAppendLoading: boolean;
+  isOnPrefixLoading: boolean;
+  isNoMore: boolean;
   cardList: Array<{
     id: number;
     height: number;
   }>;
 }>;
 
-export class App extends React.PureComponent<{}> {
+export class App extends React.PureComponent<{}, IState> {
   public state: IState = {
-    cardList: []
+    cardList: [],
+    isOnAppendLoading: false,
+    isOnPrefixLoading: false,
+    isNoMore: false,
   };
 
   public async componentDidMount() {
@@ -27,7 +33,10 @@ export class App extends React.PureComponent<{}> {
 
         <InfiniteScroll
           appendMore={this.getMoreCards}
-          refresher={this.refresh}
+          prefixMore={this.refresh}
+          isOnAppendLoading={this.state.isOnAppendLoading}
+          isOnPrefixLoading={this.state.isOnPrefixLoading}
+          isCloseAppendMore={this.state.isNoMore}
           appendMoreThreshold={20}
           pullingEnsureThreshold={80}
         >
@@ -38,6 +47,10 @@ export class App extends React.PureComponent<{}> {
   }
 
   private refresh = async () => {
+    this.setState({
+      isOnPrefixLoading: true,
+    });
+
     await new Promise(resolve => {
       setTimeout(() => {
         resolve();
@@ -47,13 +60,16 @@ export class App extends React.PureComponent<{}> {
     const newData = getData(5);
 
     this.setState({
-      cardList: newData.concat(this.state.cardList)
+      cardList: newData.concat(this.state.cardList),
+      isOnPrefixLoading: false,
     });
-
-    return newData.length;
   };
 
   private getMoreCards = async () => {
+    this.setState({
+      isOnAppendLoading: true,
+    });
+
     await new Promise(resolve => {
       setTimeout(() => {
         resolve();
@@ -63,10 +79,9 @@ export class App extends React.PureComponent<{}> {
     const newData = getData(5);
 
     this.setState({
-      cardList: this.state.cardList.concat(newData)
+      cardList: this.state.cardList.concat(newData),
+      isOnAppendLoading: false,
     });
-
-    return newData.length;
   };
 
   private itemRenderer = (item: any, index: number) => {
@@ -74,7 +89,7 @@ export class App extends React.PureComponent<{}> {
       <div
         className="item"
         style={{
-          ...(index % 2 !== 0 ? { backgroundColor: "red" } : { backgroundColor: "#ccc" })
+          ...(index % 2 !== 0 ? { backgroundColor: "red" } : { backgroundColor: "#ccc" }),
         }}
         js-index={index}
         key={index}
@@ -88,7 +103,7 @@ export class App extends React.PureComponent<{}> {
 function getData(num: number, from = 0) {
   return new Array(num).fill(1).map((_, index) => ({
     height: Math.ceil(Math.random() * 50) + 50,
-    id: from + index
+    id: from + index,
   }));
 }
 

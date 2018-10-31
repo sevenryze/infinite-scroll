@@ -1,7 +1,5 @@
 export enum Status {
-  normal,
-  appendLoading,
-  refreshing,
+  reset,
   pulling,
-  pullingEnsured
+  pullingEnsured,
 }
